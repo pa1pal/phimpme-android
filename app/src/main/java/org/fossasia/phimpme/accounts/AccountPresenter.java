@@ -42,6 +42,7 @@ public class AccountPresenter extends BasePresenter<AccountContract.View>
     /**
      * This function check if the selected account is already existed.
      *
+     *
      * @param s Name of the account from accountList e.g. Twitter
      * @return true is existed, false otherwise
      */
