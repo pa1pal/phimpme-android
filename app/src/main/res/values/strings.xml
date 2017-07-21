@@ -924,4 +924,5 @@
     <string name="login_dropbox_account">Login to Dropbox from Account manager</string>
     <string name="dropbox_share">Dropbox</string>
     <string name="title_activity_own_cloud">OwnCloudActivity</string>
+    <string name="twitter_signIn_fail">Login to Twitter</string>
 </resources>

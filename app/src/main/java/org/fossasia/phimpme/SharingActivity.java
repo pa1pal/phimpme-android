@@ -1,5 +1,6 @@
 package org.fossasia.phimpme;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,6 +9,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -108,6 +110,7 @@ import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import static org.fossasia.phimpme.data.local.AccountDatabase.AccountName.PINTEREST;
+import static org.fossasia.phimpme.data.local.AccountDatabase.AccountName.TWITTER;
 import static org.fossasia.phimpme.utilities.Utils.copyToClipBoard;
 import static org.fossasia.phimpme.utilities.Utils.getBitmapFromPath;
 import static org.fossasia.phimpme.utilities.Utils.getStringImage;
@@ -136,13 +139,13 @@ public class SharingActivity extends ThemedActivity implements View.OnClickListe
     @BindView(R.id.edittext_share_caption)
     TextView text_caption;
 
-    @BindViews({R.id.icon_00, R.id.icon_01, R.id.icon_10, R.id.icon_11, R.id.icon_20, R.id.icon_21, R.id.icon_30, R.id.icon_31,R.id.icon_32, R.id.icon_40})
+    @BindViews({R.id.icon_00, R.id.icon_01, R.id.icon_10, R.id.icon_11, R.id.icon_20, R.id.icon_21, R.id.icon_30, R.id.icon_31, R.id.icon_32, R.id.icon_40})
     List<ImageView> icons;
 
     @BindViews({R.id.title_00, R.id.title_01, R.id.title_10, R.id.title_11, R.id.title_20, R.id.title_21, R.id.title_30, R.id.title_31, R.id.title_32, R.id.title_40})
     List<TextView> titles;
 
-    @BindViews({R.id.cell_00, R.id.cell_01, R.id.cell_10, R.id.cell_11, R.id.cell_20, R.id.cell_21, R.id.cell_30, R.id.cell_31,R.id.cell_32, R.id.cell_40})
+    @BindViews({R.id.cell_00, R.id.cell_01, R.id.cell_10, R.id.cell_11, R.id.cell_20, R.id.cell_21, R.id.cell_30, R.id.cell_31, R.id.cell_32, R.id.cell_40})
     List<View> cells;
 
     @BindView(R.id.share_done)
@@ -166,17 +169,16 @@ public class SharingActivity extends ThemedActivity implements View.OnClickListe
     private PhimpmeProgressBarHandler phimpmeProgressBarHandler;
     private int[] icons_drawables = {R.drawable.ic_facebook_black, R.drawable.ic_twitter_black,
             R.drawable.ic_instagram_black, R.drawable.ic_wordpress_black, R.drawable.ic_pinterest_black,
-            R.drawable.ic_flickr_black, R.drawable.ic_nextcloud, R.drawable.ic_imgur,R.drawable.ic_dropbox_black,R.drawable.ic_share_minimal};
+            R.drawable.ic_flickr_black, R.drawable.ic_nextcloud, R.drawable.ic_imgur, R.drawable.ic_dropbox_black, R.drawable.ic_share_minimal};
     private int[] titles_text = {R.string.facebook, R.string.twitter, R.string.instagram,
-            R.string.wordpress, R.string.pinterest, R.string.flickr, R.string.nextcloud, R.string.imgur,R.string.dropbox_share, R.string.other};
+            R.string.wordpress, R.string.pinterest, R.string.flickr, R.string.nextcloud, R.string.imgur, R.string.dropbox_share, R.string.other};
 
     private Context context;
-
     private DropboxAPI<AndroidAuthSession> mDBApi;
 
     Bitmap finalBmp;
-    Boolean isPostedOnTwitter =false, isPersonal =false;
-    String boardID, imgurAuth = null,imgurString = null;
+    Boolean isPostedOnTwitter = false, isPersonal = false;
+    String boardID, imgurAuth = null, imgurString = null;
 
     public static String getClientAuth() {
         return Constants.IMGUR_HEADER_CLIENt + " " + Constants.MY_IMGUR_CLIENT_ID;
@@ -281,7 +283,7 @@ public class SharingActivity extends ThemedActivity implements View.OnClickListe
             case R.id.cell_20: //pinterest
                 if (accountPresenter.checkAlreadyExist(PINTEREST)) {
                     openPinterestDialogBox();
-                }else{
+                } else {
                     Snackbar.make(parent, getResources().getString(R.string.pinterest_signIn_fail), Snackbar.LENGTH_LONG)
                             .setAction(R.string.sign_In, new View.OnClickListener() {
                                 @Override
@@ -354,14 +356,14 @@ public class SharingActivity extends ThemedActivity implements View.OnClickListe
             if (checknetwork()) {
                 new UploadToDropbox().execute();
             }
-        }
-        catch (ArrayIndexOutOfBoundsException e){
+        } catch (ArrayIndexOutOfBoundsException e) {
             SnackBarHandler.show(parent, R.string.login_dropbox_account);
         }
     }
 
     private class UploadToDropbox extends AsyncTask<Void, Integer, Void> {
         AlertDialog dialog;
+
         @Override
         protected void onPreExecute() {
             final AlertDialog.Builder progressDialog = new AlertDialog.Builder(SharingActivity.this, getDialogStyle());
@@ -387,7 +389,7 @@ public class SharingActivity extends ThemedActivity implements View.OnClickListe
             } catch (DropboxException e) {
                 e.printStackTrace();
             }
-            if(response!=null)
+            if (response != null)
                 Log.i("Db", "The uploaded file's rev is: " + response.rev);
             return null;
         }
@@ -455,7 +457,7 @@ public class SharingActivity extends ThemedActivity implements View.OnClickListe
             @Override
             public void onClick(View v) {
                 String captionText = captionEditText.getText().toString();
-                boardID =captionText;
+                boardID = captionText;
                 shareToPinterest(boardID);
                 passwordDialog.dismiss();
             }
@@ -485,7 +487,7 @@ public class SharingActivity extends ThemedActivity implements View.OnClickListe
     }
 
     private void postToTwitter() {
-        if (checknetwork()) {
+       /* if (checknetwork()) {
             Glide.with(this)
                     .load(Uri.fromFile(new File(saveFilePath)))
                     .asBitmap()
@@ -499,10 +501,54 @@ public class SharingActivity extends ThemedActivity implements View.OnClickListe
                     });
         } else {
             Snackbar.make(parent, R.string.not_connected, Snackbar.LENGTH_LONG).show();
-        }
-    }
+        }*/
+        if (checknetwork()) {
+            if (LoginActivity.isActive(context)){
+                    try {
+                        //startActivity(new Intent(context, LoginActivity.class));
+                        final AlertDialog.Builder progressDialog = new AlertDialog.Builder(SharingActivity.this, getDialogStyle());
+                        final AlertDialog dialog;
+                        dialog = AlertDialogsHelper.getProgressDialog(SharingActivity.this, progressDialog,
+                                getString(R.string.posting_image_message), getString(R.string.please_wait));
+                        dialog.show();
 
-    private void uploadOnTwitter() {
+                        //InputStream inputStream  = view.getContext().getAssets().open("1.png");
+                        Bitmap bmp = BitmapFactory.decodeFile(saveFilePath);
+                        String filename = Environment.getExternalStorageDirectory().toString() + File.separator + "1.png";
+                        Log.d("BITMAP", filename);
+                        FileOutputStream out = new FileOutputStream(saveFilePath);
+                        bmp.compress(Bitmap.CompressFormat.PNG, 90, out);
+
+                        HelperMethods.postToTwitterWithImage(context, ((Activity) context), saveFilePath, caption, new HelperMethods.TwitterCallback() {
+
+                            @Override
+                            public void onFinsihed(Boolean response) {
+                                //mAlertBuilder.dismiss();
+                                dialog.dismiss();
+                                Snackbar.make(parent, R.string.tweet_posted_on_twitter, Snackbar.LENGTH_LONG).show();
+                            }
+                        });
+
+                    } catch (Exception ex) {
+                        Toast.makeText(context, "ERROR", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            else{
+                Snackbar.make(parent, getResources().getString(R.string.twitter_signIn_fail), Snackbar.LENGTH_LONG)
+                        .setAction(R.string.sign_In, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent accounts = new Intent(SharingActivity.this, AccountActivity.class);
+                                startActivity(accounts);
+                            }
+                        }).show();
+            }
+            } else {
+                Snackbar.make(parent, R.string.not_connected, Snackbar.LENGTH_LONG).show();
+            }
+
+    }
+    /*private void uploadOnTwitter() {
         if (LoginActivity.isActive(context)) {
             final File f3 = new File(Environment.getExternalStorageDirectory() + "/twitter_upload/");
             final File file = new File(Environment.getExternalStorageDirectory() + "/twitter_upload/" + "temp" + ".png");
@@ -527,7 +573,7 @@ public class SharingActivity extends ThemedActivity implements View.OnClickListe
         } else {
             startActivity(new Intent(context, LoginActivity.class));
         }
-    }
+    }*/
 
     private void setupFacebookAndShare() {
         if (checknetwork()) {
@@ -892,7 +938,7 @@ public class SharingActivity extends ThemedActivity implements View.OnClickListe
 
         @Override
         protected Void doInBackground(Void... arg0) {
-            uploadOnTwitter();
+            //uploadOnTwitter();
             return null;
         }
 
