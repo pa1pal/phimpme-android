@@ -31,8 +31,12 @@ import android.widget.Toast;
 
 import org.fossasia.phimpme.R;
 import org.fossasia.phimpme.base.ThemedActivity;
+import org.fossasia.phimpme.data.local.AccountDatabase;
 import org.fossasia.phimpme.leafpic.util.AlertDialogsHelper;
+import org.fossasia.phimpme.utilities.BasicCallBack;
+import org.fossasia.phimpme.utilities.Constants;
 
+import io.realm.Realm;
 import twitter4j.Twitter;
 import twitter4j.TwitterFactory;
 import twitter4j.auth.AccessToken;
@@ -55,7 +59,13 @@ public class LoginActivity extends ThemedActivity {
 	private static RequestToken requestToken;
 	private AlertDialog dialog;
 	private AlertDialog.Builder progressDialog;
+	private Realm realm = Realm.getDefaultInstance();
+	private AccountDatabase account;
+    static BasicCallBack twitterCallBack;
 
+    public static void setBasicCallBack(BasicCallBack basicCallBack){
+        twitterCallBack = basicCallBack;
+    }
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -137,17 +147,32 @@ public class LoginActivity extends ThemedActivity {
 			@Override
 			public void run() {
 				String verifier = uri.getQueryParameter(AppConstant.IEXTRA_OAUTH_VERIFIER);
-				try { 
-					SharedPreferences sharedPrefs = getSharedPreferences(AppConstant.SHARED_PREF_NAME, Context.MODE_PRIVATE);
-					AccessToken accessToken = twitter.getOAuthAccessToken(requestToken, verifier);
+				try {
+                    //realm.beginTransaction();
+                    AccessToken accessToken = twitter.getOAuthAccessToken(requestToken, verifier);
+                    SharedPreferences sharedPrefs = getSharedPreferences(AppConstant.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+
+//                    account = realm.createObject(AccountDatabase.class,
+//                            TWITTER.toString());
+//                    account.setAccountname(TWITTER);
+//                    account.setUsername(accessToken.getScreenName());
+//                    account.setToken(String.valueOf(accessToken.getToken()));
+//                    account.setSecret(String.valueOf(accessToken.getTokenSecret()));
+//                    realm.commitTransaction();
+
 					Editor e = sharedPrefs.edit();
 					e.putString(AppConstant.SHARED_PREF_KEY_TOKEN, accessToken.getToken()); 
 					e.putString(AppConstant.SHARED_PREF_KEY_SECRET, accessToken.getTokenSecret()); 
 					e.commit();
 
+                    Bundle bundle= new Bundle();
+                    bundle.putString(getString(R.string.auth_token), accessToken.getToken());
+                    bundle.putString(getString(R.string.auth_username),accessToken.getScreenName());
+                    twitterCallBack.callBack(Constants.SUCCESS, bundle);
 					Log.d(TAG, "TWITTER LOGIN SUCCESS ----TOKEN " + accessToken.getToken());
 					Log.d(TAG, "TWITTER LOGIN SUCCESS ----TOKEN SECRET " + accessToken.getTokenSecret());
-					LoginActivity.this.setResult(TWITTER_LOGIN_RESULT_CODE_SUCCESS);
+					//LoginActivity.this.setResult(TWITTER_LOGIN_RESULT_CODE_SUCCESS);
+                    finish();
 				} catch (Exception e) {
 					e.printStackTrace();
 					if(e.getMessage() != null){
