@@ -1,3 +1,4 @@
+*.DS_Store
 *.iml
 .gradle
 .idea
@@ -14,4 +15,4 @@
 libopencv_*
 /app/obj
 viewflow/
-
+gradle.properties
